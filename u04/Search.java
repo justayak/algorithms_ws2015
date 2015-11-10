@@ -36,9 +36,9 @@ public abstract class Search {
         final int step = step(S.length, r, l);
         if (l <= r) {
             int k = k(a, l, r, S);
-            // 2 compares ( == and <)
             this.compares += 2;
             if (is(S[k], a)) {
+                this.compares -= 1; // as we only need ONE compare..
                 return k;
             } else if (S[k] > a) {
                 return search(l, k-step, S, a);
