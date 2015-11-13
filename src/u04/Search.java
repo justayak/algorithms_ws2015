@@ -1,8 +1,10 @@
 package u04;
 
-import java.math.*;
 import java.util.Random;
 
+/**
+ * Homework U04
+ */
 public abstract class Search {
 
     public int compares = 0;
@@ -14,6 +16,7 @@ public abstract class Search {
     protected abstract int step(int n, int r, int l);
 
     protected abstract String name();
+
     protected String extra() {
         return "";
     }
@@ -21,15 +24,15 @@ public abstract class Search {
     @Override
     public String toString() {
         return this.name() +
-            " compares: " + this.compares +
-            " n:" + this.last_n +
-            " found:" + this.last_found +
-            " extra:" + this.extra();
+                " compares: " + this.compares +
+                " n:" + this.last_n +
+                " found:" + this.last_found +
+                " extra:" + this.extra();
     }
 
     /**
-     *  @param S input list
-     *  @param a searched value
+     * @param S input list
+     * @param a searched value
      */
     public int search(double[] S, double a) {
         this.compares = 0;
@@ -39,82 +42,131 @@ public abstract class Search {
         return result;
     }
 
-    private int search(int l, int r, double[] S, double a) {
+    protected int search(int l, int r, double[] S, double a) {
         final int step = step(S.length, r, l);
         if (l <= r) {
-            int k = k(a, l, r, S);
-            this.compares += 2;
+            final int k = k(a, l, r, S);
             if (is(S[k], a)) {
-                this.compares -= 1; // as we only need ONE compare..
                 return k;
-            } else if (S[k] > a) {
-                return search(l, k-step, S, a);
+            } else if (gt(S[k], a)) {
+                return this.searchLeft(k, step, l, r, S, a);
             } else {
-                return search(k+step, r, S, a);
+                return this.searchRight(k, step, l, r, S, a);
             }
         } else {
             return -1;
         }
     }
 
+    protected int searchLeft(final int k, final int step, final int l, final int r, double[] S, double a) {
+        return search(l, k - step, S, a);
+    }
+
+    protected int searchRight(final int k, final int step, final int l, final int r, double[] S, double a) {
+        return search(k + step, r, S, a);
+    }
+
     /**
-     *  Floating point "equality"
+     * Floating point "equality"
      */
-    public static boolean is(final double a, final double b) {
+    public boolean is(final double a, final double b) {
+        this.compares += 1;
         final double epsilon = 0.00001;
         return Math.abs(a - b) < epsilon;
     }
 
+    public boolean gt(final double a, final double b) {
+        this.compares += 1;
+        return a > b;
+    }
+
     /**
-     *  Example Binary Search
+     * Example Binary Search
      */
     private static class BinarySearch extends Search {
 
         @Override
-        protected String name() { return "Binary Search";}
+        protected String name() {
+            return "Binary Search";
+        }
 
         @Override
         protected int k(double a, int l, int r, double[] S) {
-            return (int) Math.ceil((l+r)/2.0f);
+            return (int) Math.ceil((l + r) / 2.0f);
         }
 
         @Override
         protected int step(int n, int r, int l) {
-           return 1;
+            return 1;
         }
     }
 
     /**
-     *  Aufgabe 2.a
+     * Aufgabe 2.a
      */
     private static class InterpolationSearch extends BinarySearch {
 
         @Override
-        protected String name() { return "Interpolation Search";}
+        protected String name() {
+            return "Interpolation Search";
+        }
 
         @Override
         public int k(double a, int l, int r, double[] S) {
             final double Sl_1 = l == 0 ? 0 : S[l - 1]; // prevent underflow
-            final double Srp1 = (r+1) == S.length ? 1 : S[r + 1]; // prevent overflow
-            return l - 1 + (int) Math.ceil(((a-Sl_1)/(Srp1 - Sl_1)) * (r - l + 1));
+            final double Srp1 = (r + 1) == S.length ? 1 : S[r + 1]; // prevent overflow
+            return l - 1 + (int) Math.ceil(((a - Sl_1) / (Srp1 - Sl_1)) * (r - l + 1));
         }
     }
 
     /**
-     *  Aufgabe 2.b
+     * Aufgabe 2.b
      */
     private static class QuadraticBinarySearch extends InterpolationSearch {
 
         @Override
-        protected String name() { return "Quadratic Search";}
+        protected String name() {
+            return "Quadratic Search";
+        }
 
         @Override
         public int step(int n, int r, int l) {
             final int m = r - l + 1;
             return (int) Math.ceil(Math.sqrt(m));
         }
-    }
 
+        protected int searchLeft(int k, final int step, final int l, final int r, double[] S, double a) {
+            int kplus = Math.max(k - step, l);
+            boolean stopMe = false;
+            while(true) {
+                if (gt(a, S[kplus])) {
+                    return this.search(kplus, k, S, a);
+                }
+                if (stopMe) return -1;
+                kplus = Math.max(kplus - step, l);
+                k = Math.max(k - step, l);
+                if (kplus == l) {
+                   stopMe = true;
+                }
+            }
+        }
+
+        protected int searchRight(int k, final int step, final int l, final int r, double[] S, double a) {
+            int kplus = Math.min(k + step, r);
+            boolean stopMe = false;
+            while(true) {
+                if (gt(S[kplus], a)) {
+                    return this.search(k, kplus, S, a);
+                }
+                if (stopMe) return -1;
+                kplus = Math.min(k + step, r);
+                k = Math.min(k + step, r);
+                if (kplus == r) {
+                    stopMe = true;
+                }
+            }
+        }
+    }
 
     private static double[] gen(int n) {
         final double[] S = new double[n];
@@ -125,13 +177,14 @@ public abstract class Search {
         return S;
     }
 
+    // =============================================================================
+
     /**
-     *
-     * @param S the list we want to search in
-     * @param a the value we are searching for
+     * @param S          the list we want to search in
+     * @param a          the value we are searching for
      * @param comparesIs the place where we safe the number of cmps for Interpolation
      * @param comparesQs the place where we safe the number of cmps for Quadratic
-     * @param i position in the compare lists
+     * @param i          position in the compare lists
      */
     private static void benchmark(double[] S, double a, int[] comparesIs, int[] comparesQs, int i) {
         final BinarySearch bs = new BinarySearch();
@@ -151,32 +204,34 @@ public abstract class Search {
 
     /**
      * Start the program
+     *
      * @param args
      */
     public static void main(String[] args) {
 
         final double[] S = {
-            .00000000001,
-            .0000000001,
-            .000000001,
-            .00000001,
-            .0000001,
-            .000001,
-            .00001,
-            .0001,
-            .001,
-            .01,
-            .1,
-            1
+                .00000000001,
+                .0000000001,
+                .000000001,
+                .00000001,
+                .0000001,
+                .000001,
+                .00001,
+                .0001,
+                .001,
+                .01,
+                .1,
+                1
         };
 
         benchmark(S, .1, null, null, -1);
 
-        final int COUNT = 1000;
-        final int n = 1000000;
+        final int COUNT = 0;
+        final int n = 100;
         final int[] IS = new int[COUNT];
         final int[] QS = new int[COUNT];
         final Random r = new Random();
+        if (true) return;
         for (int i = 0; i < COUNT; i++) {
             benchmark(gen(n), r.nextDouble(), IS, QS, i);
         }
@@ -189,7 +244,7 @@ public abstract class Search {
         for (int i = 0; i < L.length; i++) {
             result += L[i];
         }
-        return result/L.length;
+        return result / L.length;
     }
 
 }
