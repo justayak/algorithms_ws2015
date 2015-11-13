@@ -1,8 +1,9 @@
 import java.math.*;
+import java.util.Random;
 
 public abstract class Search {
 
-    private int compares = 0;
+    public int compares = 0;
     private int last_n = 0;
     private int last_found = -1;
 
@@ -11,13 +12,17 @@ public abstract class Search {
     protected abstract int step(int n, int r, int l);
 
     protected abstract String name();
+    protected String extra() {
+        return "";
+    }
 
     @Override
     public String toString() {
         return this.name() + 
             " compares: " + this.compares + 
             " n:" + this.last_n + 
-            " found:" + this.last_found;
+            " found:" + this.last_found +
+            " extra:" + this.extra();
     }
 
     /**
@@ -108,20 +113,69 @@ public abstract class Search {
         }
     }
 
-    public static void main(String[] args) {
+
+    private static double[] gen(int n) {
+        final double[] S = new double[n];
+        final Random r = new Random();
+        for (int i = 0; i < n; i++) {
+            S[i] = r.nextDouble();
+        }
+        return S;
+    }
+
+    private static void benchmark(double[] S, double a, int[] comparesIs, int[] comparesQs, int i) {
         final BinarySearch bs = new BinarySearch();
         final InterpolationSearch is = new InterpolationSearch();
         final QuadraticBinarySearch qs = new QuadraticBinarySearch();
-
-        final double[] S = {0, .01, .02, .03, .04, .05, .07, .075, .08, .081, .2, .9};
-        int pos = bs.search(S, .2);
+        int pos = bs.search(S, a);
         System.out.println(bs);
         
-        pos = is.search(S, .2);
+        pos = is.search(S, a);
         System.out.println(is);
+        if (comparesIs != null) comparesIs[i] = is.compares;
         
-        pos = qs.search(S, .2);
-        System.out.println(is);
+        pos = qs.search(S, a);
+        System.out.println(qs);
+        if (comparesQs != null) comparesQs[i] = qs.compares;
+    }
+
+    public static void main(String[] args) {
+
+        final double[] S = {
+            .00000000001,
+            .0000000001,
+            .000000001,
+            .00000001,
+            .0000001,
+            .000001,
+            .00001,
+            .0001,
+            .001,
+            .01,
+            .1,
+            1
+        };
+
+        benchmark(S, .1, null, null, -1);
+
+        final int COUNT = 1000;
+        final int n = 1000000;
+        final int[] IS = new int[COUNT];
+        final int[] QS = new int[COUNT];
+        final Random r = new Random();
+        for (int i = 0; i < COUNT; i++) {
+            benchmark(gen(n), r.nextDouble(), IS, QS, i);
+        }
+
+        System.out.println("is avg:" + avg(IS)); 
+    }
+
+    public static double avg(int[] L) {
+        double result = 0;
+        for (int i = 0; i < L.length; i++) {
+            result += L[i];
+        }
+        return result/L.length;
     }
 
 }
