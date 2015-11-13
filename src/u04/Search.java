@@ -1,3 +1,5 @@
+package u04;
+
 import java.math.*;
 import java.util.Random;
 
@@ -18,9 +20,9 @@ public abstract class Search {
 
     @Override
     public String toString() {
-        return this.name() + 
-            " compares: " + this.compares + 
-            " n:" + this.last_n + 
+        return this.name() +
+            " compares: " + this.compares +
+            " n:" + this.last_n +
             " found:" + this.last_found +
             " extra:" + this.extra();
     }
@@ -67,7 +69,7 @@ public abstract class Search {
      *  Example Binary Search
      */
     private static class BinarySearch extends Search {
-       
+
         @Override
         protected String name() { return "Binary Search";}
 
@@ -86,10 +88,10 @@ public abstract class Search {
      *  Aufgabe 2.a
      */
     private static class InterpolationSearch extends BinarySearch {
-        
+
         @Override
         protected String name() { return "Interpolation Search";}
-        
+
         @Override
         public int k(double a, int l, int r, double[] S) {
             final double Sl_1 = l == 0 ? 0 : S[l - 1]; // prevent underflow
@@ -102,10 +104,10 @@ public abstract class Search {
      *  Aufgabe 2.b
      */
     private static class QuadraticBinarySearch extends InterpolationSearch {
-        
+
         @Override
         protected String name() { return "Quadratic Search";}
-        
+
         @Override
         public int step(int n, int r, int l) {
             final int m = r - l + 1;
@@ -123,22 +125,34 @@ public abstract class Search {
         return S;
     }
 
+    /**
+     *
+     * @param S the list we want to search in
+     * @param a the value we are searching for
+     * @param comparesIs the place where we safe the number of cmps for Interpolation
+     * @param comparesQs the place where we safe the number of cmps for Quadratic
+     * @param i position in the compare lists
+     */
     private static void benchmark(double[] S, double a, int[] comparesIs, int[] comparesQs, int i) {
         final BinarySearch bs = new BinarySearch();
         final InterpolationSearch is = new InterpolationSearch();
         final QuadraticBinarySearch qs = new QuadraticBinarySearch();
         int pos = bs.search(S, a);
         System.out.println(bs);
-        
+
         pos = is.search(S, a);
         System.out.println(is);
         if (comparesIs != null) comparesIs[i] = is.compares;
-        
+
         pos = qs.search(S, a);
         System.out.println(qs);
         if (comparesQs != null) comparesQs[i] = qs.compares;
     }
 
+    /**
+     * Start the program
+     * @param args
+     */
     public static void main(String[] args) {
 
         final double[] S = {
@@ -167,7 +181,7 @@ public abstract class Search {
             benchmark(gen(n), r.nextDouble(), IS, QS, i);
         }
 
-        System.out.println("is avg:" + avg(IS)); 
+        System.out.println("is avg:" + avg(IS));
     }
 
     public static double avg(int[] L) {
