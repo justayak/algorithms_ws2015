@@ -115,7 +115,8 @@ public abstract class Search {
         public int k(double a, int l, int r, double[] S) {
             final double Sl_1 = l == 0 ? 0 : S[l - 1]; // prevent underflow
             final double Srp1 = (r + 1) == S.length ? 1 : S[r + 1]; // prevent overflow
-            return l - 1 + (int) Math.ceil(((a - Sl_1) / (Srp1 - Sl_1)) * (r - l + 1));
+            int res = l - 1 + (int) Math.ceil(((a - Sl_1) / (Srp1 - Sl_1)) * (r - l + 1));
+            return res;
         }
     }
 
@@ -190,16 +191,20 @@ public abstract class Search {
         final BinarySearch bs = new BinarySearch();
         final InterpolationSearch is = new InterpolationSearch();
         final QuadraticBinarySearch qs = new QuadraticBinarySearch();
-        int pos = bs.search(S, a);
+        int posA = bs.search(S, a);
         System.out.println(bs);
 
-        pos = is.search(S, a);
+        int posB = is.search(S, a);
         System.out.println(is);
         if (comparesIs != null) comparesIs[i] = is.compares;
 
-        pos = qs.search(S, a);
+        int posC = qs.search(S, a);
         System.out.println(qs);
         if (comparesQs != null) comparesQs[i] = qs.compares;
+
+        if (posA != posB || posB != posC) {
+            throw new RuntimeException("Not the same results: " + posA + "," + posB + "," + posC);
+        }
     }
 
     /**
@@ -226,12 +231,11 @@ public abstract class Search {
 
         benchmark(S, .1, null, null, -1);
 
-        final int COUNT = 0;
+        final int COUNT = 100;
         final int n = 100;
         final int[] IS = new int[COUNT];
         final int[] QS = new int[COUNT];
         final Random r = new Random();
-        if (true) return;
         for (int i = 0; i < COUNT; i++) {
             benchmark(gen(n), r.nextDouble(), IS, QS, i);
         }
