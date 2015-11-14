@@ -73,7 +73,7 @@ public abstract class Search {
      */
     public boolean is(final double a, final double b) {
         this.compares += 1;
-        final double epsilon = 0.00001;
+        final double epsilon = 0.0000000000000000000000000000000001;
         return Math.abs(a - b) < epsilon;
     }
 
@@ -142,14 +142,17 @@ public abstract class Search {
             int kplus = Math.max(k - step, l);
             boolean stopMe = false;
             while(true) {
+                if (is(a, S[kplus])) {
+                    return kplus;
+                }
                 if (gt(a, S[kplus])) {
-                    return this.search(kplus, k, S, a);
+                    return this.search(kplus+1, k, S, a);
                 }
                 if (stopMe) return -1;
                 kplus = Math.max(kplus - step, l);
                 k = Math.max(k - step, l);
                 if (kplus == l) {
-                   stopMe = true;
+                    stopMe = true;
                 }
             }
         }
@@ -158,11 +161,14 @@ public abstract class Search {
             int kplus = Math.min(k + step, r);
             boolean stopMe = false;
             while(true) {
+                if (is(a, S[kplus])) {
+                    return kplus;
+                }
                 if (gt(S[kplus], a)) {
-                    return this.search(k, kplus, S, a);
+                    return this.search(k, kplus-1, S, a);
                 }
                 if (stopMe) return -1;
-                kplus = Math.min(k + step, r);
+                kplus = Math.min(kplus + step, r);
                 k = Math.min(k + step, r);
                 if (kplus == r) {
                     stopMe = true;
@@ -207,6 +213,8 @@ public abstract class Search {
         if (comparesQs != null) comparesQs[i] = qs.compares;
 
         if (posA != posB || posB != posC) {
+            System.out.println(Arrays.toString(S));
+            System.out.println(a);
             throw new RuntimeException("Not the same results: " + posA + "," + posB + "," + posC);
         }
     }
@@ -235,13 +243,15 @@ public abstract class Search {
 
         benchmark(S, .1, null, null, -1);
 
-        final int COUNT = 1;
-        final int n = 10;
+        final int COUNT = 10000;
+        final int n = 100;
         final int[] IS = new int[COUNT];
         final int[] QS = new int[COUNT];
         final Random r = new Random();
         for (int i = 0; i < COUNT; i++) {
-            benchmark(gen(n), r.nextDouble(), IS, QS, i);
+            final double[] list = gen(n);
+            double a = r.nextDouble() >= 0.5 ? r.nextDouble() : list[r.nextInt(list.length)];
+            benchmark(list, a, IS, QS, i);
         }
 
         System.out.println("is avg:" + avg(IS));
