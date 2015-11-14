@@ -1,5 +1,7 @@
 package u04;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Random;
 
 /**
@@ -175,6 +177,8 @@ public abstract class Search {
         for (int i = 0; i < n; i++) {
             S[i] = r.nextDouble();
         }
+        Arrays.sort(S);
+        System.out.println(Arrays.toString(S));
         return S;
     }
 
@@ -214,7 +218,7 @@ public abstract class Search {
      */
     public static void main(String[] args) {
 
-        final double[] S = {
+        double[] S = {
                 .00000000001,
                 .0000000001,
                 .000000001,
@@ -231,8 +235,8 @@ public abstract class Search {
 
         benchmark(S, .1, null, null, -1);
 
-        final int COUNT = 100;
-        final int n = 100;
+        final int COUNT = 1;
+        final int n = 10;
         final int[] IS = new int[COUNT];
         final int[] QS = new int[COUNT];
         final Random r = new Random();
