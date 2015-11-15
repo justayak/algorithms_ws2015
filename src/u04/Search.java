@@ -3,6 +3,7 @@ package u04;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Random;
+import java.util.concurrent.SynchronousQueue;
 import java.util.jar.Pack200;
 
 /**
@@ -11,6 +12,7 @@ import java.util.jar.Pack200;
 public abstract class Search {
 
     public int compares = 0;
+    public int recCalls = 0;
     private int last_n = 0;
     private int last_found = -1;
 
@@ -39,6 +41,7 @@ public abstract class Search {
      */
     public int search(double[] S, double a) {
         this.compares = 0;
+        this.recCalls = 0;
         this.last_n = S.length;
         final int result = search(0, S.length - 1, S, a);
         this.last_found = result;
@@ -47,6 +50,8 @@ public abstract class Search {
 
     protected int search(int l, int r, double[] S, double a) {
         final int step = step(S.length, r, l);
+        this.recCalls += 1;
+        this.compares += 1;
         if (l <= r) {
             final int k = k(a, l, r, S);
             if (is(S[k], a)) {
@@ -186,7 +191,6 @@ public abstract class Search {
             S[i] = r.nextDouble();
         }
         Arrays.sort(S);
-        System.out.println(Arrays.toString(S));
         return S;
     }
 
@@ -199,20 +203,22 @@ public abstract class Search {
      * @param comparesQs the place where we safe the number of cmps for Quadratic
      * @param i          position in the compare lists
      */
-    private static void benchmark(double[] S, double a, int[] comparesIs, int[] comparesQs, int i) {
+    private static void benchmark(double[] S, double a, int[] comparesIs, int[] comparesQs, int[] recIs, int[] recQs, int i) {
         final BinarySearch bs = new BinarySearch();
         final InterpolationSearch is = new InterpolationSearch();
         final QuadraticBinarySearch qs = new QuadraticBinarySearch();
         int posA = bs.search(S, a);
-        System.out.println(bs);
+        //System.out.println(bs);
 
         int posB = is.search(S, a);
-        System.out.println(is);
+        //System.out.println(is);
         if (comparesIs != null) comparesIs[i] = is.compares;
+        if (recIs != null) recIs[i] = is.recCalls;
 
         int posC = qs.search(S, a);
-        System.out.println(qs);
+        //System.out.println(qs);
         if (comparesQs != null) comparesQs[i] = qs.compares;
+        if (recQs != null) recQs[i] = qs.recCalls;
 
         if (posA != posB || posB != posC) {
             System.out.println(Arrays.toString(S));
@@ -243,20 +249,32 @@ public abstract class Search {
                 1
         };
 
-        benchmark(S, .1, null, null, -1);
+        benchmark(S, .1, null, null, null, null, -1);
 
-        final int COUNT = 10000;
+        final int STEPS = 10000;
+        final int COUNT = 100;
         final int n = 1000;
         final int[] IS = new int[COUNT];
         final int[] QS = new int[COUNT];
+        final int[] RECIS = new int[COUNT];
+        final int[] RECQS = new int[COUNT];
         final Random r = new Random();
-        for (int i = 0; i < COUNT; i++) {
-            final double[] list = gen(n);
-            double a = r.nextDouble() >= 0.5 ? r.nextDouble() : list[r.nextInt(list.length)];
-            benchmark(list, a, IS, QS, i);
+
+        for (int c = 1; c <= STEPS; c *= 10) {
+            for (int i = 0; i < COUNT; i++) {
+                final double[] list = gen(n*c);
+                double a = r.nextDouble() >= 0.5 ? r.nextDouble() : list[r.nextInt(list.length)];
+                benchmark(list, a, IS, QS, RECIS, RECQS, i);
+            }
+
+
+            System.out.println("[" + (n*c) + "] IS{ comp:" + avg(IS) + " rec:" + avg(RECIS) + "} QS{" + avg(QS) + " rec:" + avg(RECQS));
+
+
         }
 
-        System.out.println("is avg:" + avg(IS));
+        //System.out.println("is avg:" + avg(IS));
+
     }
 
     public static double avg(int[] L) {
