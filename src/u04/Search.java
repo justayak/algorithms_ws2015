@@ -3,6 +3,7 @@ package u04;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Random;
+import java.util.jar.Pack200;
 
 /**
  * Homework U04
@@ -164,6 +165,7 @@ public abstract class Search {
                 if (is(a, S[kplus])) {
                     return kplus;
                 }
+                this.compares -= 1; // make this "one" compare..
                 if (gt(S[kplus], a)) {
                     return this.search(k, kplus-1, S, a);
                 }
@@ -244,7 +246,7 @@ public abstract class Search {
         benchmark(S, .1, null, null, -1);
 
         final int COUNT = 10000;
-        final int n = 100;
+        final int n = 1000;
         final int[] IS = new int[COUNT];
         final int[] QS = new int[COUNT];
         final Random r = new Random();
